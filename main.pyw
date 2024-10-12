@@ -4,7 +4,10 @@ import pickle
 import os
 from datetime import datetime
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
+SCRIPTPATH = "" #This whole path thing is to solve execution problems on Linux based sysyems.
+if os.name != "nt": 
+    SCRIPTPATH = os.path.abspath(__file__).replace(os.path.basename(__file__),"")
 
 class ToDoApp:
     def __init__(self, root):
@@ -17,7 +20,7 @@ class ToDoApp:
             if os.name == "nt":
                 self.root.iconbitmap('icon.ico')
             else:
-                self.root.iconphoto(True, tk.PhotoImage(file='icon.png'))
+                self.root.iconphoto(True, tk.PhotoImage(file=SCRIPTPATH+'icon.png'))
         except Exception as e:
             print(f"Icon not found or couldn't be loaded: {e}")
 
@@ -26,8 +29,8 @@ class ToDoApp:
         self.is_saved = True
 
         # Create the "data" directory if it doesn't exist
-        if not os.path.exists('data'):
-            os.makedirs('data')
+        if not os.path.exists(SCRIPTPATH+'data'):
+            os.makedirs(SCRIPTPATH+'data')
 
         # Use ttk for modern widgets
         style = ttk.Style()
@@ -151,12 +154,12 @@ class ToDoApp:
             # Create the top-level window for editing the task
             top = Toplevel(self.root)
             top.title("Edit Task")
-            top.geometry("350x170")
+            top.geometry("350x200")
 
             # Task Label and Entry for editing the task text
             ttk.Label(top, text="Task:").pack(pady=5)
             task_entry = ttk.Entry(top, width=50)
-            task_entry.pack(pady=5)
+            task_entry.pack(pady=5,padx=5)
             task_entry.insert(0, original_task)  # Pre-fill with the current task text
 
             # Importance Label and Combobox for editing the task importance
@@ -212,7 +215,7 @@ class ToDoApp:
                 del self.project_lists[self.current_project]  # Remove project from the dictionary
                 
                 # Delete the corresponding file
-                filepath = os.path.join('data', f'{project_name}.pkl')
+                filepath = os.path.join(SCRIPTPATH+'data', f'{project_name}.pkl')
                 if os.path.exists(filepath):
                     os.remove(filepath)
                     
@@ -234,8 +237,8 @@ class ToDoApp:
                     self.project_lists[new_project_name] = self.project_lists.pop(self.current_project)  # Rename project
 
                     # Update the file names as well
-                    old_filepath = os.path.join('data', f'{self.current_project}.pkl')
-                    new_filepath = os.path.join('data', f'{new_project_name}.pkl')
+                    old_filepath = os.path.join(SCRIPTPATH+'data', f'{self.current_project}.pkl')
+                    new_filepath = os.path.join(SCRIPTPATH+'data', f'{new_project_name}.pkl')
 
                     # Rename the project file
                     if os.path.exists(old_filepath):
@@ -276,7 +279,7 @@ class ToDoApp:
 
     def load_project_from_file(self, project_name):
         """Load the selected project and refresh the task list."""
-        filepath = os.path.join('data', f'{project_name}.pkl')
+        filepath = os.path.join(SCRIPTPATH+'data', f'{project_name}.pkl')
         if os.path.exists(filepath):
             with open(filepath, 'rb') as file:
                 # Load the project from the file, resetting any in-memory changes
@@ -303,7 +306,7 @@ class ToDoApp:
         if self.current_project:
             # Prompt user only if there are unsaved changes
             if not self.is_saved:
-                filepath = os.path.join('data', f'{self.current_project}.pkl')
+                filepath = os.path.join(SCRIPTPATH+'data', f'{self.current_project}.pkl')
                 with open(filepath, 'wb') as file:
                     pickle.dump(self.project_lists[self.current_project], file)
                 self.mark_saved()  # Mark the project as saved
@@ -314,10 +317,10 @@ class ToDoApp:
             messagebox.showwarning("No Project Loaded", "Please load or create a project first.")
 
     def load_projects(self):
-        for filename in os.listdir('data'):
+        for filename in os.listdir(SCRIPTPATH+'data'):
             if filename.endswith('.pkl'):
                 project_name = filename[:-4]
-                filepath = os.path.join('data', filename)
+                filepath = os.path.join(SCRIPTPATH+'data', filename)
                 with open(filepath, 'rb') as file:
                     self.project_lists[project_name] = pickle.load(file)
                 
